@@ -11,6 +11,7 @@ if (!process.env.SLACK_ID || !process.env.SLACK_SECRET || !process.env.PORT) {
   process.exit(1);
 }
 
+
 let chuckquote
 let getChuck = () => {
   request('https://api.chucknorris.io/jokes/random', function(error, response,body) {
@@ -22,7 +23,8 @@ let getChuck = () => {
 
 var controller = Botkit.slackbot({
   storage: database,
-  clientVerificationToken:process.env.SLACK_TOKEN
+  clientVerificationToken:process.env.SLACK_TOKEN,
+  bottoken:process.env.BOT_TOKEN
 })
 
 
