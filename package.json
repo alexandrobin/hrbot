@@ -1,0 +1,22 @@
+{
+  "name": "slackbot",
+  "version": "1.0.0",
+  "description": "Express / Botkit / Mongod / Slackbot",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Alexandre Robin",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "botkit": "^0.6.11",
+    "dotenv": "^5.0.0",
+    "express": "^4.16.2",
+    "mongodb": "^3.0.2",
+    "mongoose": "^5.0.7",
+    "monk": "^6.0.5",
+    "querystring": "^0.2.0",
+    "request": "^2.83.0"
+  }
+}
