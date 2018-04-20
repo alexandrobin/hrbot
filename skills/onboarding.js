@@ -4,7 +4,7 @@ module.exports = function(controller) {
   // --> Ask Name
   //     acknowledge name
   //     --> Ask birthday
-  //         acknowledge birthday
+  //         acknowledge birthday and Save Birth date
   //         --> Ask Staffing
   //             Present functions
 
@@ -30,6 +30,17 @@ module.exports = function(controller) {
          let ageDate = new Date(temp)
          return age = Math.abs(ageDate.getUTCFullYear() - 1970)
       }
+      controller.storage.users.get(response.user, function(err, _user){
+        if (!_user.age){
+          _user.age=age
+        }
+        if (!_user.birthday){
+          _user.birthday=response.text
+        }
+        controller.storage.users.save(_user, function(err, saved){
+          console.log(_user.id + " age was saved")
+        })
+      })
 
       console.log(age)
       convo.say(age + " ans ! Je tâcherai de m'en rappeler ;-)")

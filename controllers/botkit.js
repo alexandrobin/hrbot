@@ -4,7 +4,6 @@
 var Botkit = require('botkit');
 var mongoUri = 'mongodb://localhost:27017/hrtbot_dev'
 var database = require('../config/database')({mongoUri: mongoUri})
-var populateDB = require('../config/populateDB.js')
 var request = require('request')
 if (!process.env.SLACK_ID || !process.env.SLACK_SECRET || !process.env.PORT) {
   console.log('Error: Specify SLACK_ID SLACK_SECRET and PORT in environment');
@@ -225,3 +224,4 @@ controller.storage.teams.all(function(err,teams) {
 
 require('../skills/taskbot.js')(controller)
 require('../skills/onboarding.js')(controller)
+require('../config/populateDB.js')(controller)
