@@ -63,6 +63,16 @@ module.exports = function(controller) {
     bot.startPrivateConversation(message,beginOnboarding)
   })
 
+  controller.on('team_join', function(bot,response){
+    console.log(response)
+    controller.storage.users.save(response.user, function(err, _user){
+      if (!err){
+        console.log(_user.id + " has been added to the database")
+      }
+    })
+    bot.startPrivateConversation({user:response.user.id}, beginOnboarding)
+  })
+
   controller.on('onboard', function(bot){
 
         debug('Starting an onboarding experience!');
