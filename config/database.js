@@ -111,6 +111,12 @@ module.exports = function(config) {
             },
             all: function(cb) {
                 Users.find({}, cb);
+            },
+            find: function(data, cb) {
+                Users.find(data, cb);
+            },
+            delete: function(id, cb) {
+                Users.findOneAndDelete({id: id}, cb);
             }
         },
         channels: {

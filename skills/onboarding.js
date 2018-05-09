@@ -64,7 +64,10 @@ module.exports = function(controller) {
   })
 
   controller.on('team_join', function(bot,response){
-    console.log(response)
+    let d = new Date()
+        d.setHours(0,0,0,0)
+    //Create a unique timestamp to know when the user joined the Slack for the first time
+    response.user.joinedDate = d.valueOf()//new Date().toLocaleDateString("fr-FR") //to be tested
     controller.storage.users.save(response.user, function(err, _user){
       if (!err){
         console.log(_user.id + " has been added to the database")

@@ -23,7 +23,6 @@ let getChuck = () => {
 var controller = Botkit.slackbot({
   storage: database,
   clientVerificationToken:process.env.SLACK_TOKEN,
-  bottoken:process.env.BOT_TOKEN
 })
 
 
@@ -80,6 +79,7 @@ controller.on('create_bot',function(bot,team) {
         }
       });
 
+
     });
   }
 });
@@ -97,6 +97,61 @@ controller.on('rtm_open',function(bot) {
   //   console.log(channel)
   // })
   getChuck()
+
+  //CRON JOB To execute some logic every day.
+  var CronJob = require('cron').CronJob
+  var job = new CronJob(/*'00 00 9 * * 1-5'*/'* * * * *', function() {
+  /*
+   * Runs every weekday (Monday through Friday)
+   * at 09:00:00 AM. It does not run on Saturday
+   * or Sunday.
+   */
+   let  d = new Date()
+        d.setUTCHours(0,0,0,0)
+        console.log(d.toUTCString())
+        console.log(d)
+
+   let  threeMonthsAgo = new Date()
+        threeMonthsAgo.setUTCMonth(d.getUTCMonth() - 3)
+        threeMonthsAgo.setUTCHours(0,0,0,0)
+        console.log(threeMonthsAgo.toUTCString())
+        console.log(+threeMonthsAgo)
+
+    sendSurvey = function(response, convo) {
+      convo.say({
+            "text": "Hey ! Cela fait maintenant 1 semaine que tu es là, le temps passe vite !",
+            "attachments": [
+                {
+                    "title": "Quels sont tes retours après cette première semaine ?",
+                    "title_link": "https://fr.surveymonkey.com/r/JMSBNV2"
+                }
+            ]
+        })
+      convo.next()
+    }
+
+
+   controller.storage.users.find({"joinedDate":{"$gt":+threeMonthsAgo}}, function(err,user){
+     user.forEach(function(member){
+       console.log(member.id)
+       bot.startPrivateConversation({user:member.id},sendSurvey)
+     })
+   } )
+   console.log("cron job worked - " + new Date())
+  //  bot.say({
+  //   text: "cron job worked - " + new Date(),
+  //   channel: 'GAB29LZ6C' // a valid slack channel, group, mpim, or im ID
+  // }
+  // )
+
+  }, function () {
+    /* This function is executed when the job stops */
+  },
+  false, /* Start the job right now */
+  timeZone= 'Europe/Paris' /* Time zone of this job. */
+  )
+
+
   bot.rtm.close();
 
 });
