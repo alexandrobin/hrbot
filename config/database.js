@@ -115,6 +115,9 @@ module.exports = function(config) {
             find: function(data, cb) {
                 Users.find(data, cb);
             },
+            aggregate:function(data,options){
+                return Users.aggregate(data,options)
+            },
             delete: function(id, cb) {
                 Users.findOneAndDelete({id: id}, cb);
             }
