@@ -2,10 +2,9 @@
 
 /* Uses the slack button feature to offer a real time bot to multiple teams */
 var Botkit = require('botkit');
-var mongoUri = 'mongodb://localhost:27017/hrtbot_dev'
-var database = require('../config/database')({mongoUri: mongoUri})
+var database = require('../config/database')({mongoUri: process.env.MONGO})
 var request = require('request')
-var Conversations = require('../skills/checkday.js')
+var Conversations = require('../skills/conversations.js')
 if (!process.env.SLACK_ID || !process.env.SLACK_SECRET || !process.env.PORT) {
   console.log('Error: Specify SLACK_ID SLACK_SECRET and PORT in environment');
   process.exit(1);
@@ -88,7 +87,7 @@ controller.on('rtm_open', function(bot) {
   var CronJob = require('cron').CronJob
 
   //MondayCheck
-  var mondayCheck = new CronJob(/*'00 00 10 * * 1'*/'* * * * *', function(){
+  var mondayCheck = new CronJob('00 00 10 * * 1'/*'* * * * *'*/, function(){
   //Create a conversation between two users every monday
     console.log(`MondayCheck triggered ${new Date()}`)
     let d = new Date()
@@ -97,6 +96,8 @@ controller.on('rtm_open', function(bot) {
     let threeMonthsAgo = new Date()
         threeMonthsAgo.setUTCMonth(d.getUTCMonth() - 3)
         threeMonthsAgo.setUTCHours(0, 0, 0, 0)
+
+    Conversations.mondayReminder(bot)
 
     controller.storage.users.find({"joinedDate":{"$gt":+threeMonthsAgo}
     }, function(err,user){
@@ -126,7 +127,7 @@ controller.on('rtm_open', function(bot) {
 
   }, function() {
     /* This function is executed when the job stops */
-  }, false,
+  }, true,
   /* Start the job right now */
   timeZone = 'Europe/Paris'/* Time zone of this job. */)
 
@@ -201,6 +202,7 @@ controller.on('rtm_close', function(bot) {
 controller.hears([
   'hello', 'hi'
 ], 'direct_message,direct_mention,mention', function(bot, message) {
+
 
   bot.api.reactions.add({
     timestamp: message.ts,
@@ -323,4 +325,5 @@ controller.storage.teams.all(function(err, teams) {
 
 require('../skills/taskbot.js')(controller)
 require('../skills/onboarding.js')(controller)
+require('../skills/usefullinks.js')(controller)
 require('../config/populateDB.js')(controller)

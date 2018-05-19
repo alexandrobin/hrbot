@@ -1,14 +1,3 @@
-// //SET UP FIRST ROOT ROUTE
-// app.get('/',function(req,res){
-//   res.send('hi there !')
-// })
-//
-//
-// app.listen(8093,'151.80.32.51',function(){
-//   console.log('server has started')
-// })
-
-
 var express        = require('express');
 var app            = express();
 var bodyParser     = require('body-parser');
