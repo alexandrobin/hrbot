@@ -10,12 +10,12 @@ module.exports = function(controller) {
 
             // user object can contain arbitary keys. we will store tasks in .tasks
             if (!user || !user.tasks || user.tasks.length == 0) {
-                bot.reply(message, 'There are no tasks on your list. Say `add _task_` to add something.');
+                bot.reply(message, "Il n'y a plus aucune tâche dans ta liste. Ecris `add _task_` pour en ajouter une.");
             } else {
 
-                var text = 'Here are your current tasks: \n' +
+                var text = 'Voici toutes tes tâches en cours : \n' +
                     generateTaskList(user) +
-                    'Reply with `done _number_` to mark a task completed.';
+                    'Répond avec `done _number_` pour compléter une tâche.';
 
                 bot.reply(message, text);
 
@@ -46,7 +46,7 @@ module.exports = function(controller) {
             controller.storage.users.save(user, function(err,saved) {
 
                 if (err) {
-                    bot.reply(message, 'I experienced an error adding your task: ' + err);
+                    bot.reply(message, "Quelque chose a bugué, merci de communiquer ce message d'erreur : "  + err);
                 } else {
                     bot.api.reactions.add({
                         name: 'thumbsup',
@@ -67,7 +67,7 @@ module.exports = function(controller) {
         var number = message.match[1];
 
         if (isNaN(number)) {
-            bot.reply(message, 'Please specify a number.');
+            bot.reply(message, 'Merci de préciser le numéro.');
         } else {
 
             // adjust for 0-based array index
@@ -85,7 +85,7 @@ module.exports = function(controller) {
                 }
 
                 if (number < 0 || number >= user.tasks.length) {
-                    bot.reply(message, 'Sorry, your input is out of range. Right now there are ' + user.tasks.length + ' items on your list.');
+                    bot.reply(message, "Désolé, mais le chiffre ne correspond pas à ce que j'ai en tête. En ce moment, il y a " + user.tasks.length + ' tâches en cours');
                 } else {
 
                     var item = user.tasks.splice(number,1);
@@ -96,16 +96,16 @@ module.exports = function(controller) {
                     bot.reply(message, '~' + item + '~');
 
                     if (user.tasks.length > 0) {
-                        bot.reply(message, 'Here are our remaining tasks:\n' + generateTaskList(user));
+                        bot.reply(message, 'Voici les tâches restantes\n' + generateTaskList(user));
                     } else {
-                        bot.reply(message, 'Your list is now empty!');
+                        bot.reply(message, 'La liste est maintenant vide !');
                     }
                 }
 
                 controller.storage.users.save(user, function(err,saved) {
 
                     if (err) {
-                        bot.reply(message, 'I experienced an error deleting your task: ' + err);
+                        bot.reply(message, "Je n'ai pas pu supprimer cette tâche, voic le message d'erreur : " + err);
                     } else {
                         bot.api.reactions.add({
                             name: 'white_check_mark',
