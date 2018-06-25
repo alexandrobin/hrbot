@@ -30,6 +30,11 @@ app.set('port', (process.env.PORT));
 //botkit (apres port)
 require('./controllers/botkit')
 
+//Keep Heroku alive :
+var httpAlive = require("http");
+setInterval(function() {
+    httpAlive.get("http://hrtbot.herokuapp.com");
+}, 300000); // every 5 minutes (300000)
 
 //START ===================================================
 

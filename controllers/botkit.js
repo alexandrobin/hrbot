@@ -5,18 +5,12 @@ var Botkit = require('botkit');
 var database = require('../config/database')({mongoUri: process.env.MONGO})
 var request = require('request')
 var Conversations = require('../skills/conversations.js')
+var Skills = require('../skills/meetbot.js')
 if (!process.env.SLACK_ID || !process.env.SLACK_SECRET || !process.env.PORT) {
   console.log('Error: Specify SLACK_ID SLACK_SECRET and PORT in environment');
   process.exit(1);
 }
 
-let chuckquote
-let getChuck = () => {
-  request('https://api.chucknorris.io/jokes/random', function(error, response, body) {
-    let data = JSON.parse(response.body)
-    chuckquote = data.value
-  })
-}
 
 var controller = Botkit.slackbot({storage: database, clientVerificationToken: process.env.SLACK_TOKEN})
 
@@ -81,17 +75,17 @@ controller.on('create_bot', function(bot, team) {
 controller.on('rtm_open', function(bot) {
   console.log('** The RTM api just connected!');
 
-  getChuck()
 
   //CRON JOB To execute some logic every day.
   var CronJob = require('cron').CronJob
 
   //MondayCheck
   var mondayCheck = new CronJob('00 00 10 * * 1'/*'* * * * *'*/, function(){
-  //Create a conversation between two users every monday
+  //Create a conversation between two users every monday 00 00 10 * * 1
     console.log(`MondayCheck triggered ${new Date()}`)
     let d = new Date()
         d.setUTCHours(0, 0, 0, 0)
+        console.log(+d)
 
     let threeMonthsAgo = new Date()
         threeMonthsAgo.setUTCMonth(d.getUTCMonth() - 3)
@@ -99,30 +93,7 @@ controller.on('rtm_open', function(bot) {
 
     Conversations.mondayReminder(bot)
 
-    controller.storage.users.find({"joinedDate":{"$gt":+threeMonthsAgo}
-    }, function(err,user){
-      user.forEach(function(member){
-        console.log(member.id)
-        if(!member.hasMet){
-          member.hasMet = []
-        }
-
-        let randMember = controller.storage.users.aggregate([ { "$sample": { size: 1 } } ])
-        randMember.then(function(result){
-          console.log(result)
-          bot.api.conversations.open(
-            {
-              users:`${member.id},UAA649D88`
-            }, function(err,response){
-              console.log(response)
-              bot.say({
-                text:`Hey, Have you met @${member.id} ?`,
-                channel:response.channel.id
-              })
-            })
-        })
-      })
-    })
+    Skills.meetbot(controller, threeMonthsAgo, bot)
 
 
   }, function() {
@@ -134,30 +105,46 @@ controller.on('rtm_open', function(bot) {
 
 
   //DAILY CHECK
-  var dailyCheck = new CronJob('00 00 9 * * 1-5' , function() {
+  var dailyCheck = new CronJob('00 00 9 * * 1-7' , function() {
     /*
-   * Runs every weekday (Monday through Friday)
-   * at 09:00:00 AM. It does not run on Saturday
-   * or Sunday.
+    00 00 9 * * 1-7
+   * Runs every day
+   * at 09:00:00 AM.
    */
    console.log(`DailyCheck triggered ${new Date()}`)
     //Gets today's date
     let d = new Date()
         d.setUTCHours(0, 0, 0, 0)
         console.log(d.toUTCString())
-        console.log(d)
+        console.log(+d)
 
     let threeMonthsAgo = new Date()
         threeMonthsAgo.setUTCMonth(d.getUTCMonth() - 3)
         threeMonthsAgo.setUTCHours(0, 0, 0, 0)
-        console.log(threeMonthsAgo.toUTCString())
-        console.log(+ threeMonthsAgo)
 
     let sevenDaysAgo = new Date()
         sevenDaysAgo.setUTCDate(d.getUTCDate() - 7)
         sevenDaysAgo.setUTCHours(0, 0, 0, 0)
-        console.log(sevenDaysAgo.toUTCString())
-        console.log(+ sevenDaysAgo)
+
+    let birthdayCheck = new Date()
+        birthdayCheck.setUTCHours(0,0,0,0)
+        birthdayCheck.setYear(1970)
+
+    Conversations.day2(controller, bot, d)
+    Conversations.day3(controller, bot, d)
+
+    controller.storage.users.find({
+      "birthdayTS":{"$eq":+birthdayCheck}
+    }, function(err,user){
+      let attachments = []
+      if (user.length >= 1){
+      user.forEach(function(member){
+        attachments.push({"title":member.name})
+      })
+      Conversations.birthday(bot, attachments)
+
+    }
+  } )
 
     controller.storage.users.find({
       "joinedDate":{"$eq":+sevenDaysAgo}
@@ -256,22 +243,6 @@ controller.hears('^stop', 'direct_message', function(bot, message) {
   bot.rtm.close();
 });
 
-controller.on('slash_command', function(bot, message) {
-  console.log("command triggered : " + message.command + " by " + message.user)
-  /*switch(message.command){
-    case "/airtable" :
-        bot.replyPrivate("Blablabla test")
-        break
-    case "/admin":
-        if (message.text === "start_onboarding")
-          startOnboarding()
-        break
-    default:
-        bot.replyPrivate(message,"Sorry did not get it")
-        break
-  }*/
-  bot.replyPrivate(message, 'Hey, did you try to summon me ?')
-})
 
 controller.on('direct_message,mention,direct_mention', function(bot, message) {
   bot.api.reactions.add({
@@ -282,23 +253,10 @@ controller.on('direct_message,mention,direct_mention', function(bot, message) {
     if (err) {
       console.log(err)
     }
-    bot.reply(message, 'I heard you loud and clear boss.');
+    bot.reply(message, 'Message bien reçu, mais je ne peux pas vous aider sur ce sujet.');
   });
 });
 
-controller.on('reaction_added', function(bot, event) {
-  console.log(event)
-  bot.startPrivateConversation(event, function(err, convo) {
-    console.log(chuckquote)
-    if (err) {
-      console.log(err);
-    } else {
-      convo.say('You just reacted with :chucknorris:... Here is one for you');
-      convo.say(chuckquote);
-      getChuck()
-    }
-  });
-})
 
 controller.storage.teams.all(function(err, teams) {
 
